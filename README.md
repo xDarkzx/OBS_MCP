@@ -65,7 +65,11 @@ OBS Studio ships `obs-websocket` built in since v28 — nothing to install.
 1. Open OBS Studio.
 2. **Tools → WebSocket Server Settings**.
 3. Check **Enable WebSocket server**.
-4. Note the **Server Port** (default `4455`) and, if you set one, the **Server Password**.
+4. Note the **Server Port** (default `4455`).
+
+**No password set yet?** Leave it blank and skip to step 4 — `OBS_PASSWORD` stays empty.
+
+**Already have a password** (from a Stream Deck integration, chatbot, or earlier setup)? Don't retype it from memory — click **Show Connect Info** in that same settings window, which reveals the exact password OBS has stored. Copy it from there.
 
 ### 4. Add OBS-MCP to your AI client
 
@@ -84,7 +88,7 @@ OBS Studio ships `obs-websocket` built in since v28 — nothing to install.
 }
 ```
 
-Leave `OBS_PASSWORD` empty (`""`) if you didn't set one in OBS. Check your client's MCP documentation for the config file location.
+Leave `OBS_PASSWORD` empty (`""`) if you didn't set one in OBS. If your password contains a `"` or `\`, escape it for JSON (`\"` / `\\`) — everything else can go in as-is. Check your client's MCP documentation for the config file location. Full walkthrough with more detail: [Installation Guide](docs/INSTALLATION.md).
 
 ### 5. Talk to your AI
 
@@ -145,7 +149,7 @@ Pulls `GetStats` + `GetStreamStatus` + `GetRecordStatus` in one call and interpr
 | Problem | Fix |
 |---------|-----|
 | "Could not connect to OBS" | Make sure OBS Studio is running and Tools → WebSocket Server Settings → Enable WebSocket server is checked. |
-| "Authentication failed" | Your `OBS_PASSWORD` env var doesn't match the password set in OBS's WebSocket Server Settings — or you set a password in OBS but left the env var empty. |
+| "Authentication failed" | Your `OBS_PASSWORD` env var doesn't match the password set in OBS's WebSocket Server Settings — or you set a password in OBS but left the env var empty. Don't retype the password from memory: Tools → WebSocket Server Settings → **Show Connect Info** shows the exact value OBS has stored. |
 | Tool calls hang | Check OBS itself isn't showing a blocking dialog (e.g. a "scene collection changed" prompt) — some requests block until the user dismisses OBS-side UI. |
 | Scene/input "not found" errors | Names are case-sensitive and must match exactly what's shown in OBS. Call `get_scene_list` / `get_input_list` first. |
 

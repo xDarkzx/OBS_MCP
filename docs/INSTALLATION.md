@@ -37,7 +37,26 @@ OBS Studio has shipped `obs-websocket` v5 built in since **v28** — no plugin t
 2. **Tools → WebSocket Server Settings**.
 3. Check **Enable WebSocket server**.
 4. Note the **Server Port** (default `4455`).
-5. If you want a password (recommended if OBS is reachable from other machines on your network), set one and note it — otherwise leave it blank.
+
+Then pick whichever of these matches your setup:
+
+### You haven't set a password before (fresh setup)
+
+Leave the password field blank in OBS. Leave `OBS_PASSWORD` empty (`""`) in the config in Step 3. This is the simplest option and is fine for a single-machine, purely local setup — nothing on your network can reach OBS's WebSocket port without also being on your machine or LAN.
+
+If you'd rather set one now (recommended if other devices on your network can reach this PC), check **Enable Authentication**, set a password, and use that value below instead.
+
+### You already have a password set (existing streaming setup)
+
+If you've used obs-websocket before for something else — a Stream Deck integration, a chatbot, another automation tool — there's likely already a password configured, and you don't need to remember or reset it. OBS will show it to you:
+
+1. **Tools → WebSocket Server Settings → Show Connect Info**.
+2. This opens a window with your Server IP, Port, and **Password** already filled in and visible.
+3. Copy the password exactly as shown — don't retype it, complex generated passwords are easy to mistype.
+
+Paste that exact value into `OBS_PASSWORD` in Step 3. One thing worth knowing if your password has special characters: if it contains a `"` or `\`, escape it for JSON (`\"` and `\\` respectively) — everything else (spaces, `!@#$%^&*`, etc.) can go directly inside the quotes with no escaping needed.
+
+---
 
 OBS-MCP connects to `localhost:4455` with no password by default. Override with environment variables if yours differs:
 
@@ -202,7 +221,7 @@ If you see your actual scene list come back, you're all set — everything downs
 | Problem | Cause | Fix |
 |---------|-------|-----|
 | "Could not connect to OBS" | OBS isn't running, or WebSocket server is disabled | Start OBS, check Tools → WebSocket Server Settings → Enable WebSocket server |
-| "Authentication failed" | Password mismatch | Match `OBS_PASSWORD` to what's set in OBS's WebSocket Server Settings exactly, including empty vs. set |
+| "Authentication failed" | Password mismatch | Match `OBS_PASSWORD` to what's set in OBS's WebSocket Server Settings exactly, including empty vs. set. Use **Show Connect Info** in that settings window to see the exact stored password instead of retyping it from memory — this is the #1 cause of this error with pre-existing/complex passwords. |
 | "command not found: obs-mcp" | Not installed, or installed in a different Python env than your AI client uses | Run `pip install -e .` from the repo folder |
 | Config not working | Wrong path or JSON syntax | Copy the complete example above, validate JSON at jsonlint.com |
 | Claude Desktop doesn't see OBS-MCP | Config not loaded | Restart Claude Desktop after editing the config |
