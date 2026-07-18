@@ -47,8 +47,9 @@ class TestExpectedModulesStaysInSync:
         assert on_disk == _EXPECTED_MODULES
 
     def test_tool_count_matches_protocol_coverage(self):
-        """147 tools = full obs-websocket v5 coverage minus Sleep (batch-only,
-        not implemented). If this drifts, either a tool was silently dropped
+        """148 tools = full obs-websocket v5 coverage minus Sleep (batch-only,
+        not implemented) plus diagnose_av_health (a pipeline tool, not a raw
+        protocol wrapper). If this drifts, either a tool was silently dropped
         or a new one was added without updating this guard rail."""
         import re
 
@@ -58,4 +59,4 @@ class TestExpectedModulesStaysInSync:
             src = module.__file__
             with open(src, encoding="utf-8") as f:
                 total += len(re.findall(r"@mcp\.tool\(\)", f.read()))
-        assert total == 147, f"Expected 147 tools, found {total}"
+        assert total == 148, f"Expected 148 tools, found {total}"

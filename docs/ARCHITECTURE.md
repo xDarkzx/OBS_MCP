@@ -74,9 +74,10 @@ fails loud instead of shipping quiet.
 
 ## Pipeline tools vs. raw requests
 
-146 of the 147 tools are direct 1:1 wrappers over an obs-websocket request —
-faithful, unopinionated, complete. `pipeline_tools.py` is the exception: it
-composes several raw requests into the outcome a user actually wants.
+146 of the 148 tools are direct 1:1 wrappers over an obs-websocket request —
+faithful, unopinionated, complete. `pipeline_tools.py` is the exception: its
+two tools compose several raw requests (or interpret their combined output)
+into the outcome a user actually wants.
 
 `clean_audio_input` is the first of these — it builds a Noise Gate → Noise
 Suppression → Compressor filter chain in the correct signal order, using
@@ -97,6 +98,16 @@ adjacent, correctly-ordered group (at the earliest position any of them
 occupies), so a mic that already had e.g. a Compressor from before doesn't
 end up with the new Gate appended after it — which would invert the whole
 point of gate-first ordering.
+
+`diagnose_av_health` is the second — it doesn't create or change anything,
+it pulls `GetStats` + `GetStreamStatus` + `GetRecordStatus` in one call and
+computes the render-skip / output-skip / congestion ratios itself instead of
+leaving the AI to fetch three things and do the arithmetic. The interpretation
+matters as much as the fetching here: high output-thread skips with *low*
+network congestion point at the encoder, but the same skip rate with *high*
+congestion points at the network instead — conflating those two sends
+someone chasing the wrong fix. Thresholds are heuristics (documented as such
+in the tool's own docstring), not authoritative OBS-defined cutoffs.
 
 More pipelines belong here as they're built: anything that would otherwise
 make the calling AI hand-assemble several raw requests and guess at

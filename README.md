@@ -108,9 +108,9 @@ With OBS running and the WebSocket server enabled, ask your AI assistant to swit
 | **Stream & Record** | 14 | Start/stop/toggle, captions, pause/resume, file splitting, chapter markers |
 | **Media** | 4 | Playback control for media sources — status, seek, play/pause/stop/restart/next/previous |
 | **UI** | 8 | Studio mode, property/filter/interact dialogs, monitor list, projectors |
-| **Pipelines** | 1 | `clean_audio_input` — one-call Noise Gate → Suppression → Compressor chain with verified OBS filter parameters |
+| **Pipelines** | 2 | `clean_audio_input` — one-call Noise Gate → Suppression → Compressor chain with verified OBS filter parameters. `diagnose_av_health` — one-call frame-drop/congestion/disk-space diagnosis instead of raw stats |
 
-**147 tools total** — full coverage of the obs-websocket v5 protocol (the one intentional omission, `Sleep`, only functions inside request batches, which this version doesn't implement yet).
+**148 tools total** — full coverage of the obs-websocket v5 protocol (the one intentional omission, `Sleep`, only functions inside request batches, which this version doesn't implement yet) plus the two composite pipeline tools above.
 
 ### `clean_audio_input` — the pipeline tool
 
@@ -121,6 +121,14 @@ clean_audio_input(input_name="Mic/Aux")
 ```
 
 Builds a Noise Gate → Noise Suppression (RNNoise) → Compressor chain in the correct signal order, using parameter keys verified against OBS Studio's actual filter source (`plugins/obs-filters/*.c`) — not guessed from the UI. Skips any stage that's already present instead of duplicating it.
+
+### `diagnose_av_health` — "why is my stream dropping frames?"
+
+```
+diagnose_av_health()
+```
+
+Pulls `GetStats` + `GetStreamStatus` + `GetRecordStatus` in one call and interprets them instead of handing back raw numbers: render-thread skip rate points at a GPU/scene bottleneck, output-thread skips with low network congestion point at the encoder, high congestion points at your upload/bitrate, and low disk space gets flagged before it silently kills a recording. Ask your AI "why are my frames dropping" or "is my stream healthy" and it has real numbers to reason from instead of guessing.
 
 ---
 

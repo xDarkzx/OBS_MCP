@@ -4,6 +4,16 @@ All notable changes to OBS-MCP will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **`diagnose_av_health` pipeline tool.** Pulls `GetStats` + `GetStreamStatus`
+  + `GetRecordStatus` in one call and interprets the render-skip/output-skip/
+  congestion ratios instead of returning raw numbers — distinguishes a GPU/
+  scene bottleneck (high render-thread skips) from an encoder bottleneck
+  (high output-thread skips, low congestion) from a network bottleneck (high
+  congestion), and flags low disk space before it silently kills a
+  recording. 148 tools total now.
+
 ### Fixed
 
 - **Concurrent tool calls could corrupt results.** `obsws-python`'s request

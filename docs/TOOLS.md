@@ -1,6 +1,6 @@
 # Tools Reference
 
-Complete reference for every MCP tool exposed by OBS-MCP — **147 tools across 13 modules**, full coverage of the [obs-websocket v5](https://github.com/obsproject/obs-websocket) protocol. Grouped by domain; each tool's exact request/response shape follows the [official protocol spec](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).
+Complete reference for every MCP tool exposed by OBS-MCP — **148 tools across 13 modules**, full coverage of the [obs-websocket v5](https://github.com/obsproject/obs-websocket) protocol plus two composite pipeline tools. Grouped by domain; each tool's exact request/response shape follows the [official protocol spec](https://github.com/obsproject/obs-websocket/blob/master/docs/generated/protocol.md).
 
 Scene, input, and filter names are **case-sensitive** and must match exactly what's shown in OBS. Use `get_scene_list` / `get_input_list` / `get_source_filter_list` to see exact names before acting on them.
 
@@ -211,6 +211,7 @@ Source: `pipeline_tools.py` — composite tools that do the actual job in one ca
 | Tool | Description |
 |------|-------------|
 | `clean_audio_input(input_name, gate, suppression, compressor, ...)` | One-call Noise Gate → Noise Suppression → Compressor chain. Filter parameter keys verified against OBS Studio's actual C source, not guessed. Auto-picks RNNoise vs. the older suppression method based on what the connected OBS build supports. Skips stages that already exist. |
+| `diagnose_av_health()` | One-call frame-drop/congestion/disk-space diagnosis. Pulls `GetStats` + `GetStreamStatus` + `GetRecordStatus` and interprets the render-skip/output-skip/congestion ratios instead of returning raw numbers — flags GPU bottlenecks, encoder bottlenecks, network congestion, and low disk space separately so the fix suggested actually matches the cause. |
 
 ---
 

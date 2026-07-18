@@ -208,3 +208,126 @@ class TestCleanAudioInputValidation:
         assert "compressor_filter" not in result["filters_created"]
         create_calls = [c for c in client.calls if c[0] == "CreateSourceFilter"]
         assert len(create_calls) == 2
+
+
+class FakeStatsClient:
+    """Fake client for diagnose_av_health — returns canned GetStats /
+    GetStreamStatus / GetRecordStatus responses instead of hitting real OBS."""
+
+    def __init__(self, stats=None, stream_status=None, record_status=None):
+        self._stats = stats or {}
+        self._stream_status = stream_status or {}
+        self._record_status = record_status or {}
+
+    async def execute(self, request_type, **data):
+        if request_type == "GetStats":
+            return self._stats
+        if request_type == "GetStreamStatus":
+            return self._stream_status
+        if request_type == "GetRecordStatus":
+            return self._record_status
+        return {}
+
+
+def _diagnose_tool(monkeypatch, **kwargs):
+    client = FakeStatsClient(**kwargs)
+    monkeypatch.setattr(main_module, "client", client)
+    mcp = FakeMCP()
+    pipeline_tools.register(mcp)
+    return mcp.tools["diagnose_av_health"]
+
+
+class TestDiagnoseAvHealth:
+    @pytest.mark.asyncio
+    async def test_healthy_stats_report_no_findings(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={
+                "renderSkippedFrames": 0, "renderTotalFrames": 1000,
+                "outputSkippedFrames": 0, "outputTotalFrames": 1000,
+                "cpuUsage": 5.0, "memoryUsage": 200.0, "availableDiskSpace": 50000.0,
+            },
+            stream_status={"outputActive": True, "outputReconnecting": False, "outputCongestion": 0.0},
+            record_status={"outputActive": False, "outputPaused": False},
+        )
+        result = await tool()
+        assert result["findings"] == ["No sustained frame-skip, congestion, or disk-space issues detected in current stats."]
+        assert result["render_skipped_frames_percent"] == 0.0
+        assert result["streaming"]["active"] is True
+
+    @pytest.mark.asyncio
+    async def test_high_render_skip_flags_gpu_bottleneck(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={
+                "renderSkippedFrames": 50, "renderTotalFrames": 1000,
+                "outputSkippedFrames": 0, "outputTotalFrames": 1000,
+            },
+            stream_status={"outputCongestion": 0.0},
+        )
+        result = await tool()
+        assert result["render_skipped_frames_percent"] == 5.0
+        assert any("Render thread" in f for f in result["findings"])
+        assert not any("congestion" in f.lower() and "upload" in f.lower() for f in result["findings"])
+
+    @pytest.mark.asyncio
+    async def test_high_congestion_flags_network_not_encoder(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={
+                "renderSkippedFrames": 0, "renderTotalFrames": 1000,
+                "outputSkippedFrames": 80, "outputTotalFrames": 1000,
+            },
+            stream_status={"outputCongestion": 0.6},
+        )
+        result = await tool()
+        findings_text = " ".join(result["findings"])
+        assert "upload" in findings_text.lower()
+        # High congestion explains the output skips — shouldn't ALSO blame
+        # the encoder, that would send someone chasing the wrong fix.
+        assert "encoding itself" not in findings_text
+
+    @pytest.mark.asyncio
+    async def test_output_skip_with_low_congestion_blames_encoder(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={
+                "renderSkippedFrames": 0, "renderTotalFrames": 1000,
+                "outputSkippedFrames": 80, "outputTotalFrames": 1000,
+            },
+            stream_status={"outputCongestion": 0.02},
+        )
+        result = await tool()
+        assert any("encoding itself" in f for f in result["findings"])
+
+    @pytest.mark.asyncio
+    async def test_reconnecting_stream_is_flagged(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={"renderTotalFrames": 100, "outputTotalFrames": 100},
+            stream_status={"outputReconnecting": True, "outputCongestion": 0.0},
+        )
+        result = await tool()
+        assert any("reconnecting" in f.lower() for f in result["findings"])
+
+    @pytest.mark.asyncio
+    async def test_low_disk_space_is_flagged(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={"renderTotalFrames": 100, "outputTotalFrames": 100, "availableDiskSpace": 500.0},
+            stream_status={"outputCongestion": 0.0},
+        )
+        result = await tool()
+        assert any("disk space" in f.lower() for f in result["findings"])
+
+    @pytest.mark.asyncio
+    async def test_no_frames_yet_does_not_divide_by_zero(self, monkeypatch):
+        tool = _diagnose_tool(
+            monkeypatch,
+            stats={"renderSkippedFrames": 0, "renderTotalFrames": 0,
+                   "outputSkippedFrames": 0, "outputTotalFrames": 0},
+            stream_status={"outputCongestion": 0.0},
+        )
+        result = await tool()
+        assert result["render_skipped_frames_percent"] == 0.0
+        assert result["streaming"]["skipped_frames_percent"] == 0.0

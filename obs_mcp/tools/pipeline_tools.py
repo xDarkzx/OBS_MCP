@@ -151,3 +151,87 @@ def register(mcp: FastMCP):
                 "gain/distance first."
             ),
         }
+
+    @mcp.tool()
+    async def diagnose_av_health() -> dict:
+        """Diagnose why a stream/recording might be dropping frames or stuttering
+        — pulls GetStats + GetStreamStatus + GetRecordStatus in one call and
+        interprets the ratios instead of leaving the AI to fetch three things
+        and do the arithmetic itself.
+
+        The three numbers that actually matter, and what each one means:
+        - renderSkippedFrames/renderTotalFrames high: OBS's render thread can't
+          keep up with your scene (too many sources/filters, canvas resolution
+          too high, or GPU-bound). Fix: lower canvas resolution, cut filters,
+          simplify the scene.
+        - outputSkippedFrames/outputTotalFrames high with LOW congestion:
+          encoding can't keep up (CPU/GPU encoder overloaded). Fix: switch to
+          a hardware encoder (NVENC/AMF/QSV), lower the encoder preset, or
+          lower output resolution/fps.
+        - outputCongestion high: the network can't keep up with your bitrate.
+          Fix: lower bitrate, check upload speed.
+
+        These thresholds are heuristics, not authoritative OBS cutoffs — a
+        few skipped frames right after starting a stream is normal; this
+        flags *sustained* skip ratios worth investigating, not noise.
+        """
+        stats = await client.execute("GetStats")
+        stream_status = await client.execute("GetStreamStatus")
+        record_status = await client.execute("GetRecordStatus")
+
+        def pct(skipped, total):
+            return round(100 * skipped / total, 2) if total else 0.0
+
+        render_skip_pct = pct(stats.get("renderSkippedFrames", 0), stats.get("renderTotalFrames", 0))
+        output_skip_pct = pct(stats.get("outputSkippedFrames", 0), stats.get("outputTotalFrames", 0))
+        congestion = stream_status.get("outputCongestion", 0.0)
+
+        findings = []
+        if render_skip_pct > 2.0:
+            findings.append(
+                f"Render thread is skipping {render_skip_pct}% of frames — OBS can't render "
+                f"your scene fast enough. Likely GPU-bound: lower canvas resolution, cut "
+                f"filters/sources, or simplify the scene."
+            )
+        if output_skip_pct > 2.0 and congestion < 0.1:
+            findings.append(
+                f"Output thread is skipping {output_skip_pct}% of frames with low network "
+                f"congestion ({congestion}) — encoding itself can't keep up. Switch to a "
+                f"hardware encoder (NVENC/AMF/QSV), lower the encoder preset, or lower "
+                f"output resolution/fps."
+            )
+        if congestion > 0.1:
+            findings.append(
+                f"Output congestion is {congestion} (0.0-1.0 scale) — your upload can't "
+                f"keep up with the current bitrate. Lower the video bitrate or check your "
+                f"actual upload speed."
+            )
+        if stream_status.get("outputReconnecting"):
+            findings.append("Stream output is actively reconnecting right now — the connection to your streaming service just dropped.")
+        available_disk_mb = stats.get("availableDiskSpace", None)
+        if available_disk_mb is not None and available_disk_mb < 2048:
+            findings.append(
+                f"Only {available_disk_mb}MB of disk space free on the recording drive — "
+                f"recordings can silently stop or corrupt when this runs out."
+            )
+
+        if not findings:
+            findings.append("No sustained frame-skip, congestion, or disk-space issues detected in current stats.")
+
+        return {
+            "streaming": {
+                "active": stream_status.get("outputActive", False),
+                "reconnecting": stream_status.get("outputReconnecting", False),
+                "congestion": congestion,
+                "skipped_frames_percent": output_skip_pct,
+            },
+            "recording": {
+                "active": record_status.get("outputActive", False),
+                "paused": record_status.get("outputPaused", False),
+            },
+            "render_skipped_frames_percent": render_skip_pct,
+            "cpu_usage_percent": stats.get("cpuUsage"),
+            "memory_usage_mb": stats.get("memoryUsage"),
+            "available_disk_space_mb": available_disk_mb,
+            "findings": findings,
+        }
