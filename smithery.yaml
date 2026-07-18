@@ -1,0 +1,53 @@
+# Smithery registration for OBS-MCP — https://smithery.ai/docs
+#
+# OBS-MCP is a stdio MCP server that talks to OBS Studio's built-in
+# obs-websocket v5 server over a local WebSocket connection. Because it
+# drives a locally-installed desktop application, users must install
+# OBS-MCP and run OBS Studio on their own machine — Smithery hosts the
+# listing and configuration UI, not a running instance.
+#
+# Install instructions: https://github.com/xDarkzx/OBS_MCP#quick-start
+
+startCommand:
+  type: stdio
+
+  configSchema:
+    type: object
+    properties:
+      host:
+        type: string
+        title: "OBS host"
+        description: >-
+          Host OBS Studio's WebSocket server is running on. Almost always
+          localhost unless you're connecting to OBS on another machine.
+        default: localhost
+      port:
+        type: string
+        title: "OBS WebSocket port"
+        description: >-
+          Port set in OBS under Tools > WebSocket Server Settings.
+        default: "4455"
+      password:
+        type: string
+        title: "OBS WebSocket password"
+        description: >-
+          Password set in OBS under Tools > WebSocket Server Settings.
+          Leave blank if you didn't set one.
+        default: ""
+    required: []
+
+  commandFunction: |-
+    (config) => ({
+      command: 'obs-mcp',
+      args: [],
+      env: {
+        OBS_HOST: config.host || 'localhost',
+        OBS_PORT: config.port || '4455',
+        OBS_PASSWORD: config.password || ''
+      }
+    })
+
+  exampleConfig:
+    host: localhost
+    port: "4455"
+    password: ""

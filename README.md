@@ -46,13 +46,13 @@ OBS-MCP works with any AI client that supports the [Model Context Protocol](http
 
 **Option B:** Clone with git:
 ```bash
-git clone https://github.com/xDarkzx/OBS-MCP.git
+git clone https://github.com/xDarkzx/OBS_MCP.git
 ```
 
 ### 2. Install
 
 ```bash
-cd OBS-MCP
+cd OBS_MCP
 pip install -e .
 ```
 
@@ -167,8 +167,30 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 ## Support
 
-Found a bug or want a feature? [Open an issue](https://github.com/xDarkzx/OBS-MCP/issues).
+Found a bug or want a feature? [Open an issue](https://github.com/xDarkzx/OBS_MCP/issues).
+
+If OBS-MCP has helped your stream, consider buying me a coffee:
+
+<p align="center">
+  <a href="https://buymeacoffee.com/xdarkzx">
+    <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" />
+  </a>
+</p>
+
+Your support helps keep this project maintained and free for everyone.
+
+---
+
+## Documentation
+
+- **[Installation Guide](docs/INSTALLATION.md)** — Detailed setup for Windows, macOS, Linux and every supported MCP client
+- **[Tools Reference](docs/TOOLS.md)** — Every tool grouped by domain, with a one-line description and signature
+- **[Architecture](docs/ARCHITECTURE.md)** — Connection layer, tool registry, pipeline tools, protocol reference
+- **[Contributing](CONTRIBUTING.md)** — How to add tools and contribute
+- **[Changelog](CHANGELOG.md)** — Version history and release notes
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
+
+Built by [Daniel Hodgetts](https://github.com/xDarkzx) &bull; [𝕏 @daehonz1](https://x.com/daehonz1)

@@ -41,6 +41,24 @@ class FakeOBSClient:
             return {"filters": self._existing_filters}
         if request_type == "GetSourceFilterKindList":
             return {"sourceFilterKinds": self._available_kinds}
+        if request_type == "CreateSourceFilter":
+            self._existing_filters.append({
+                "filterKind": data["filterKind"],
+                "filterName": data["filterName"],
+                "filterIndex": len(self._existing_filters),
+                "filterEnabled": True,
+                "filterSettings": data.get("filterSettings", {}),
+            })
+            return {}
+        if request_type == "SetSourceFilterIndex":
+            name = data["filterName"]
+            target = data["filterIndex"]
+            idx = next(i for i, f in enumerate(self._existing_filters) if f["filterName"] == name)
+            item = self._existing_filters.pop(idx)
+            self._existing_filters.insert(target, item)
+            for i, f in enumerate(self._existing_filters):
+                f["filterIndex"] = i
+            return {}
         return {}
 
 
@@ -82,7 +100,9 @@ class TestCleanAudioInputChainOrder:
 class TestCleanAudioInputSkipsExisting:
     @pytest.mark.asyncio
     async def test_skips_gate_already_present(self, monkeypatch):
-        client = FakeOBSClient(existing_filters=[{"filterKind": "noise_gate_filter"}])
+        client = FakeOBSClient(existing_filters=[
+            {"filterKind": "noise_gate_filter", "filterName": "Noise Gate", "filterIndex": 0},
+        ])
         monkeypatch.setattr(main_module, "client", client)
         mcp = FakeMCP()
         pipeline_tools.register(mcp)
@@ -97,9 +117,9 @@ class TestCleanAudioInputSkipsExisting:
     @pytest.mark.asyncio
     async def test_no_filters_created_when_all_already_present(self, monkeypatch):
         client = FakeOBSClient(existing_filters=[
-            {"filterKind": "noise_gate_filter"},
-            {"filterKind": "noise_suppress_filter_v2"},
-            {"filterKind": "compressor_filter"},
+            {"filterKind": "noise_gate_filter", "filterName": "Noise Gate", "filterIndex": 0},
+            {"filterKind": "noise_suppress_filter_v2", "filterName": "Noise Suppression", "filterIndex": 1},
+            {"filterKind": "compressor_filter", "filterName": "Compressor", "filterIndex": 2},
         ])
         monkeypatch.setattr(main_module, "client", client)
         mcp = FakeMCP()
@@ -141,6 +161,37 @@ class TestCleanAudioInputSuppressKindSelection:
 
         assert "noise_suppress_filter" in result["filters_created"]
         assert "noise_suppress_filter_v2" not in result["filters_created"]
+
+
+class TestCleanAudioInputFixesOrderAroundPreexistingFilters:
+    """Regression test: a real mic had a manually-added Compressor and Noise
+    Suppression (in that order) before clean_audio_input ever ran. The old
+    code only checked *whether* a stage existed, never *where* — so it
+    appended the missing Gate to the end of the chain, landing it AFTER
+    Compressor/Suppression and inverting the whole point of gate-first
+    ordering. It should end up first regardless of what pre-existed."""
+
+    @pytest.mark.asyncio
+    async def test_gate_added_after_preexisting_stages_still_ends_up_first(self, monkeypatch):
+        client = FakeOBSClient(existing_filters=[
+            {"filterKind": "basic_eq_filter", "filterName": "3-Band Equalizer", "filterIndex": 0},
+            {"filterKind": "compressor_filter", "filterName": "Compressor", "filterIndex": 1},
+            {"filterKind": "noise_suppress_filter_v2", "filterName": "Noise Suppression", "filterIndex": 2},
+        ])
+        monkeypatch.setattr(main_module, "client", client)
+        mcp = FakeMCP()
+        pipeline_tools.register(mcp)
+
+        result = await mcp.tools["clean_audio_input"](input_name="Mic/Aux")
+
+        assert result["filters_created"] == ["noise_gate_filter"]
+        final = sorted(client._existing_filters, key=lambda f: f["filterIndex"])
+        managed_order = [f["filterName"] for f in final if f["filterName"] in
+                          ("Noise Gate", "Noise Suppression", "Compressor")]
+        assert managed_order == ["Noise Gate", "Noise Suppression", "Compressor"]
+        # The unrelated EQ filter that was already first stays out of the
+        # managed group's way instead of being silently reshuffled far away.
+        assert final[0]["filterName"] == "3-Band Equalizer"
 
 
 class TestCleanAudioInputValidation:

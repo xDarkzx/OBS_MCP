@@ -4,14 +4,36 @@ All notable changes to OBS-MCP will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Concurrent tool calls could corrupt results.** `obsws-python`'s request
+  layer does a bare send-then-recv with no request-ID matching, so two
+  overlapping calls could each read the other's response off the socket.
+  `OBSClient.execute()` now serializes every call (connect included) through
+  one lock.
+- **The OBS WebSocket password was logged in plaintext.** `obsws-python`
+  logs `"Connecting with parameters: ... password='...'"` at `INFO` on every
+  connect; with our own logger also at `INFO`, that line reached stderr (and
+  whatever log file the MCP client persists it to). `obsws_python`'s logger
+  is now capped at `WARNING`.
+- **An ordinary OBS-side error (bad scene name, out-of-range value) forced a
+  full reconnect on the next call**, identically to an actual dropped
+  connection — even though the socket was still healthy. Only a real
+  connection failure resets the client now.
+- **`clean_audio_input` could append the Noise Gate after a pre-existing
+  Compressor/Suppression filter**, inverting the gate-first ordering the
+  whole tool exists to guarantee. It now anchors its three managed stages
+  as an adjacent, correctly-ordered group regardless of what already
+  existed on the input.
+
 ### Added
 
 - **Initial release — 147 tools covering the full obs-websocket v5 protocol.**
-  ⚠️ **Not yet tested against a live OBS Studio instance** — every tool maps
-  to a verified obs-websocket request (field names and types checked against
-  the official protocol spec, not guessed), and the full module set was
-  syntax-checked and registration-tested, but no end-to-end run against real
-  OBS has happened yet. Test before relying on it for anything live.
+  Verified live against a real OBS Studio instance — scene/audio-mixer
+  control, filter chains, video/output settings, and screenshots all
+  confirmed working end-to-end, in addition to every tool mapping to a
+  verified obs-websocket request (field names and types checked against the
+  official protocol spec, not guessed).
   - **General** (9 tools): version/stats, hotkeys, custom events, vendor
     requests, persistent data.
   - **Config** (15 tools): scene collections, profiles, video/canvas

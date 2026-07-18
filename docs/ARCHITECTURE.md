@@ -12,7 +12,7 @@ just a faithful, complete Python wrapper around it.
 
 ```
 obs_mcp/
-├── main.py            # FastMCP server entry point, registers all tools
+├── main.py             # FastMCP server entry point, registers all tools
 ├── obs_client.py       # Async wrapper over obsws-python's sync ReqClient
 ├── error_codes.py      # Typed error taxonomy (OBSMCPError)
 ├── tool_registry.py    # Auto-discovers tools/*.py modules, fail-loud on gaps
@@ -28,8 +28,8 @@ obs_mcp/
     ├── output_tools.py         # Virtual cam, replay buffer, generic outputs
     ├── stream_record_tools.py  # Start/stop/pause/split/chapters
     ├── media_tools.py          # Media source playback control
-    ├── ui_tools.py              # Studio mode, dialogs, projectors
-    └── pipeline_tools.py        # Composite tools — clean_audio_input, etc.
+    ├── ui_tools.py             # Studio mode, dialogs, projectors
+    └── pipeline_tools.py       # Composite tools — clean_audio_input, etc.
 ```
 
 ## Connection layer
@@ -47,9 +47,15 @@ methods, which don't cover 100% of the protocol. This is what makes full
 147-request coverage possible without waiting on an upstream library update
 for newer protocol additions (like Canvases, added in obs-websocket v5.7.0).
 
-Connection is lazy — the first tool call triggers a connect; a dropped
-connection resets state so the *next* call reconnects instead of failing
-forever.
+Connection is lazy — the first tool call triggers a connect. Every call
+(connect included) is serialized through a single `asyncio.Lock`: `obsws-python`'s
+request layer does a bare send-then-recv with no request-ID matching, so two
+tool calls running concurrently could each read the other's response off the
+socket. A real connection failure (no reply at all) resets state so the
+*next* call reconnects instead of failing forever — but an ordinary
+OBS-side error (bad scene name, out-of-range value) leaves the connection
+alone, since the socket is still healthy and the AI will hit that case
+routinely while exploring scene/source names.
 
 ## Tool registry
 
@@ -82,6 +88,15 @@ suppression stage, since which noise-suppress filter kind is registered
 (`noise_suppress_filter` vs. the newer RNNoise-based
 `noise_suppress_filter_v2`) depends on the platform and OBS build — assuming
 one would silently fail on builds that only have the other.
+
+It skips any stage whose filter *kind* already exists on the input instead
+of duplicating it — but a pre-existing stage could be anywhere in the
+chain, and a newly created one always lands at the end. After creating and
+skipping, it does one more pass to anchor its three managed stages as an
+adjacent, correctly-ordered group (at the earliest position any of them
+occupies), so a mic that already had e.g. a Compressor from before doesn't
+end up with the new Gate appended after it — which would invert the whole
+point of gate-first ordering.
 
 More pipelines belong here as they're built: anything that would otherwise
 make the calling AI hand-assemble several raw requests and guess at

@@ -11,6 +11,12 @@ from obs_mcp.tool_registry import register_all_tools
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
 logger = logging.getLogger(__name__)
 
+# obsws-python logs the OBS password in plaintext ("Connecting with
+# parameters: ... password='...'") at INFO on every connect. Raise it above
+# our own INFO level so that line never reaches stderr (and whatever log
+# file the MCP client persists stderr to).
+logging.getLogger("obsws_python").setLevel(logging.WARNING)
+
 client = OBSClient()
 
 mcp = FastMCP(

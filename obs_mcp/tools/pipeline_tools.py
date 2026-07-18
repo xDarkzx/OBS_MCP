@@ -58,6 +58,7 @@ def register(mcp: FastMCP):
 
         existing = await client.execute("GetSourceFilterList", sourceName=input_name)
         existing_kinds = {f.get("filterKind") for f in existing.get("filters", [])}
+        name_by_kind = {f.get("filterKind"): f.get("filterName") for f in existing.get("filters", [])}
 
         # Which noise-suppress filter kind this OBS build actually registers
         # varies (v2/RNNoise isn't available on every platform) — ask instead
@@ -67,10 +68,12 @@ def register(mcp: FastMCP):
 
         created = []
         skipped = []
+        stage_names = []  # filterName of each enabled stage, in gate/suppress/compressor order
 
         if gate:
             if "noise_gate_filter" in existing_kinds:
                 skipped.append("noise_gate_filter")
+                stage_names.append(name_by_kind["noise_gate_filter"])
             else:
                 settings = dict(_GATE_DEFAULTS)
                 settings["open_threshold"] = gate_open_threshold_db
@@ -80,10 +83,13 @@ def register(mcp: FastMCP):
                     filterKind="noise_gate_filter", filterSettings=settings,
                 )
                 created.append("noise_gate_filter")
+                stage_names.append("Noise Gate")
 
         if suppression:
             if "noise_suppress_filter" in existing_kinds or "noise_suppress_filter_v2" in existing_kinds:
                 skipped.append(suppress_kind)
+                existing_suppress_kind = "noise_suppress_filter_v2" if "noise_suppress_filter_v2" in existing_kinds else "noise_suppress_filter"
+                stage_names.append(name_by_kind[existing_suppress_kind])
             else:
                 settings = {"method": suppression_method}
                 if suppression_method == "speex":
@@ -93,10 +99,12 @@ def register(mcp: FastMCP):
                     filterKind=suppress_kind, filterSettings=settings,
                 )
                 created.append(suppress_kind)
+                stage_names.append("Noise Suppression")
 
         if compressor:
             if "compressor_filter" in existing_kinds:
                 skipped.append("compressor_filter")
+                stage_names.append(name_by_kind["compressor_filter"])
             else:
                 settings = dict(_COMPRESSOR_DEFAULTS)
                 settings["ratio"] = compressor_ratio
@@ -106,6 +114,30 @@ def register(mcp: FastMCP):
                     filterKind="compressor_filter", filterSettings=settings,
                 )
                 created.append("compressor_filter")
+                stage_names.append("Compressor")
+
+        # A newly created stage always lands at the END of the chain, and a
+        # pre-existing stage (found via existing_kinds above) could be
+        # anywhere — so without this, running clean_audio_input on an input
+        # that already has e.g. a Compressor would append Gate AFTER it,
+        # inverting the whole point of gate-first ordering. Move the managed
+        # stages to sit adjacent, in the correct relative order, anchored at
+        # the earliest position any of them currently occupies (so filters
+        # that were already before all three stay before them).
+        if len(stage_names) > 1:
+            current = await client.execute("GetSourceFilterList", sourceName=input_name)
+            index_by_name = {f["filterName"]: f["filterIndex"] for f in current.get("filters", [])}
+            anchor = min(index_by_name[name] for name in stage_names)
+            # Each move shifts every filter after it, which invalidates the
+            # rest of index_by_name — so this can't skip a stage just
+            # because its pre-move index happened to match its target; only
+            # unconditionally re-issuing every move keeps positions correct
+            # after earlier moves in this same loop have already shuffled
+            # the chain.
+            for offset, name in enumerate(stage_names):
+                await client.execute(
+                    "SetSourceFilterIndex", sourceName=input_name, filterName=name, filterIndex=anchor + offset,
+                )
 
         return {
             "input_name": input_name,

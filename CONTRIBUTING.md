@@ -5,8 +5,8 @@ Thanks for your interest in contributing! Every PR — tool, bug fix, doc, or te
 ## Development setup
 
 ```bash
-git clone https://github.com/xDarkzx/OBS-MCP.git
-cd OBS-MCP
+git clone https://github.com/xDarkzx/OBS_MCP.git
+cd OBS_MCP
 pip install -e ".[dev]"
 ```
 
@@ -34,6 +34,8 @@ Example:
 ```python
 from mcp.server.fastmcp import FastMCP
 
+from obs_mcp.error_codes import ErrorCode, OBSMCPError
+
 def register(mcp: FastMCP):
     from obs_mcp.main import client
 
@@ -45,7 +47,7 @@ def register(mcp: FastMCP):
             scene_name: What this parameter controls.
         """
         if not scene_name:
-            raise ValueError("scene_name is required")
+            raise OBSMCPError(ErrorCode.MISSING_PARAMETER, "scene_name is required")
         return await client.execute("MyRequestType", sceneName=scene_name)
 ```
 
