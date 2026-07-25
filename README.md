@@ -56,19 +56,39 @@ You don't need to know any code to use this. The installer below handles everyth
 
 ### 1. Get OBS-MCP
 
-**Option A:** Click the green **Code** button above → **Download ZIP** → extract it to a folder somewhere easy to find (like your Desktop)
+**Option A:** Click the green **Code** button above → **Download ZIP** → extract it to a folder somewhere easy to find (like your Desktop) — works with nothing pre-installed, easiest on a brand new machine.
 
-**Option B:** Clone with git:
+**Option B:** Clone with git (lets you `git pull` for updates later):
+
+A fresh Windows install doesn't ship with git — check first:
+```powershell
+git --version
+```
+If that says "not recognized", install it, then close and reopen your terminal:
+```powershell
+winget install --id Git.Git -e --source winget
+```
+(`winget` itself ships with Windows 11 and up-to-date Windows 10. If `winget` isn't found either, grab the installer directly from [git-scm.com](https://git-scm.com/download/win).)
+
+macOS/Linux almost always have git already — `git --version` to check, or `brew install git` / `sudo apt install git` if not.
+
 ```bash
 git clone https://github.com/xDarkzx/OBS_MCP.git
 ```
 
 ### 2. Run the installer (installs OBS-MCP *and* sets up your AI client, automatically)
 
-Open the folder you just extracted/cloned, then:
+**Windows:** either double-click `install.bat` in File Explorer, or — if you're already in a terminal from the `git clone` step above — just keep going in the same PowerShell/Command Prompt window (copy-paste both lines):
+```powershell
+cd OBS_MCP
+.\install.bat
+```
 
-- **Windows:** Double-click `install.bat`
-- **macOS / Linux:** Open a terminal in that folder and run `bash install.sh`
+**macOS / Linux:**
+```bash
+cd OBS_MCP
+bash install.sh
+```
 
 The installer checks you have Python (offers to install it if not), installs the `obs-mcp` command, and — if you say yes when it asks — automatically writes the config for Claude Desktop and/or LM Studio. No manual JSON editing required. Once it finishes, skip straight to [step 3](#3-enable-the-websocket-server-in-obs).
 
