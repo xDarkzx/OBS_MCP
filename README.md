@@ -95,13 +95,25 @@ The installer checks you have Python (offers to install it if not), installs the
 <details>
 <summary>I don't use Claude Desktop or LM Studio, or want to install manually</summary>
 
-**If you can `pip install`:**
+**Don't even want to clone the repo?** OBS-MCP is on PyPI:
+
+```bash
+pip install obs-mcp
+```
+
+or, for zero footprint (same idea as `npx` in Node.js — nothing stays installed):
+
+```bash
+uvx obs-mcp
+```
+
+**If you already have the repo cloned/extracted:**
 
 ```bash
 pip install -e .
 ```
 
-from inside the folder. This gives you an `obs-mcp` command on your PATH — find where it landed with `where obs-mcp` (Windows) or `which obs-mcp` (macOS/Linux) if you ever need the exact file path. Add this to your client's MCP config:
+from inside the folder. Either way you get an `obs-mcp` command on your PATH — find where it landed with `where obs-mcp` (Windows) or `which obs-mcp` (macOS/Linux) if you ever need the exact file path. Add this to your client's MCP config:
 
 ```json
 {

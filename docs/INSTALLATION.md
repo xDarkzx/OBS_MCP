@@ -2,7 +2,7 @@
 
 Get OBS-MCP running in 3 steps: **install OBS-MCP → enable the WebSocket server in OBS → connect your AI client**.
 
-All install options below assume you start from a **cloned copy of this repo** — there is no `pip install obs-mcp` published on PyPI yet.
+OBS-MCP is published on PyPI as `obs-mcp` — no clone required if you just want it running. The one-click installer below is still the easiest path if you've never touched MCP config files before, since it also writes your AI client's config for you.
 
 ---
 
@@ -13,9 +13,23 @@ All install options below assume you start from a **cloned copy of this repo** �
 - **Windows:** Double-click `install.bat` in the repo folder
 - **macOS / Linux:** Open a terminal in the repo folder and run `bash install.sh`
 
-The installer checks for Python (offers to install it if missing), installs `obs-mcp`, and — if you say yes when asked — automatically writes the config for Claude Desktop and/or LM Studio. Skip to [Step 2](#step-2-enable-the-websocket-server-in-obs) once it finishes.
+The installer checks for Python (offers to install it if missing), installs `obs-mcp`, and — if you say yes when asked — automatically writes the config for Claude Desktop and/or LM Studio. Skip to [Step 2](#step-2-enable-the-websocket-server-in-obs) once it finishes. (This still needs a cloned/downloaded copy of the repo — it's the file `install.bat`/`install.sh` that does the work.)
 
-### Option B: pip install from source
+### Option B: Install from PyPI (no clone needed)
+
+```bash
+pip install obs-mcp
+```
+
+or, for a true zero-install run (nothing left behind, matches the same idea as `npx` in the Node.js world):
+
+```bash
+uvx obs-mcp
+```
+
+Either way you get the `obs-mcp` command — you'll still need to write the client config yourself (see [Step 3](#step-3-connect-your-ai-client)), since there's no repo folder for an installer script to run from.
+
+### Option C: pip install from source
 
 ```bash
 git clone https://github.com/xDarkzx/OBS_MCP.git
@@ -23,9 +37,9 @@ cd OBS_MCP
 pip install -e .
 ```
 
-This gives you the `obs-mcp` command.
+This gives you the `obs-mcp` command, and lets you `git pull` for updates or modify the code.
 
-### Option C: Run directly (no install)
+### Option D: Run directly (no install)
 
 ```bash
 cd OBS_MCP
