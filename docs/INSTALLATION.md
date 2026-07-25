@@ -8,7 +8,14 @@ All install options below assume you start from a **cloned copy of this repo** �
 
 ## Step 1: Install OBS-MCP
 
-### Option A: pip install from source
+### Option A: One-click installer (easiest, especially if you've never used MCP before)
+
+- **Windows:** Double-click `install.bat` in the repo folder
+- **macOS / Linux:** Open a terminal in the repo folder and run `bash install.sh`
+
+The installer checks for Python (offers to install it if missing), installs `obs-mcp`, and — if you say yes when asked — automatically writes the config for Claude Desktop and/or LM Studio. Skip to [Step 2](#step-2-enable-the-websocket-server-in-obs) once it finishes.
+
+### Option B: pip install from source
 
 ```bash
 git clone https://github.com/xDarkzx/OBS_MCP.git
@@ -18,7 +25,7 @@ pip install -e .
 
 This gives you the `obs-mcp` command.
 
-### Option B: Run directly (no install)
+### Option C: Run directly (no install)
 
 ```bash
 cd OBS_MCP
@@ -72,7 +79,9 @@ OBS-MCP connects to `localhost:4455` with no password by default. Override with 
 
 ## Step 3: Connect Your AI Client
 
-Pick your client below. Each section shows the **complete config** — copy it and you're done.
+**If you used the one-click installer and said yes to configuring your client**, this is already done — skip to [Verify It Works](#verify-it-works).
+
+Otherwise, pick your client below. Each section shows the **complete config** — copy it and you're done.
 
 ### Claude Desktop
 
@@ -196,6 +205,34 @@ Or create `.cursor/mcp.json` in your project root (or `~/.cursor/mcp.json` for g
 }
 ```
 
+### LM Studio
+
+Relevant if you're running a local/offline model instead of a cloud one — LM Studio's MCP support works the same way regardless of which model you have loaded.
+
+1. Open LM Studio → **Program** tab in the right sidebar → **Install** → **Edit mcp.json**
+2. Add the `obs` entry inside `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "obs": {
+      "command": "obs-mcp",
+      "env": { "OBS_HOST": "localhost", "OBS_PORT": "4455", "OBS_PASSWORD": "" }
+    }
+  }
+}
+```
+
+3. Save — LM Studio loads MCP servers defined in `mcp.json` automatically.
+
+<details>
+<summary>Config file location</summary>
+
+- **Windows:** `%USERPROFILE%\.lmstudio\mcp.json`
+- **macOS / Linux:** `~/.lmstudio/mcp.json`
+
+</details>
+
 ### Other MCP Clients
 
 OBS-MCP uses **stdio transport**. Point any MCP-compatible client at the `obs-mcp` command, with `OBS_HOST` / `OBS_PORT` / `OBS_PASSWORD` in its environment if your setup differs from the defaults.
@@ -222,8 +259,11 @@ If you see your actual scene list come back, you're all set — everything downs
 |---------|-------|-----|
 | "Could not connect to OBS" | OBS isn't running, or WebSocket server is disabled | Start OBS, check Tools → WebSocket Server Settings → Enable WebSocket server |
 | "Authentication failed" | Password mismatch | Match `OBS_PASSWORD` to what's set in OBS's WebSocket Server Settings exactly, including empty vs. set. Use **Show Connect Info** in that settings window to see the exact stored password instead of retyping it from memory — this is the #1 cause of this error with pre-existing/complex passwords. |
-| "command not found: obs-mcp" | Not installed, or installed in a different Python env than your AI client uses | Run `pip install -e .` from the repo folder |
+| "command not found: obs-mcp" | Not installed, or installed in a different Python env than your AI client uses | Run the installer again, or manually: `pip install -e .` from the repo folder |
 | Config not working | Wrong path or JSON syntax | Copy the complete example above, validate JSON at jsonlint.com |
 | Claude Desktop doesn't see OBS-MCP | Config not loaded | Restart Claude Desktop after editing the config |
 | Tool calls hang | OBS itself showing a blocking dialog | Check for a "scene collection changed" or similar prompt in OBS — some requests block until you dismiss OBS-side UI |
 | Scene/input "not found" errors | Name mismatch | Names are case-sensitive and must match exactly. Call `get_scene_list` / `get_input_list` first to see exact names |
+| "externally-managed-environment" error during `install.sh` | Modern Python + PEP 668 | Re-run `install.sh` — it auto-retries with `--user`. Or use `pipx install -e .` |
+| `bash: ./install.sh: /bin/bash^M: bad interpreter` | Git on Windows converted line endings to CRLF | Run `bash install.sh` (don't execute directly), or `sed -i 's/\r$//' install.sh`. Pulling the latest repo (with `.gitattributes`) avoids this. |
+| `install.sh` / `install.bat` says "obs-mcp isn't resolving on PATH" | Multiple Python installs on the machine, or a fresh terminal hasn't picked up the PATH change yet | Close and reopen your terminal, then run `obs-mcp --help` (or just retry asking your AI client) — if it still doesn't resolve, run `which -a obs-mcp` (macOS/Linux) or `where obs-mcp` (Windows) to see every copy on PATH and which one wins |

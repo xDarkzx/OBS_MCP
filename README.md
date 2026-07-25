@@ -8,7 +8,7 @@
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-purple.svg" alt="MCP Compatible" /></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.1.0-orange.svg" alt="v0.1.0" /></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.0-orange.svg" alt="v0.2.0" /></a>
   <a href="#development"><img src="https://img.shields.io/badge/tests-pytest-0A9EDC.svg" alt="pytest" /></a>
   <a href="https://obsproject.com/"><img src="https://img.shields.io/badge/OBS%20Studio-28%2B-red.svg" alt="OBS Studio 28+" /></a>
 </p>
@@ -23,9 +23,11 @@
 
 ---
 
-OBS-MCP connects any MCP-compatible AI assistant to [OBS Studio](https://obsproject.com/), giving it full control over your stream and recordings through **147 tools** covering the entire [obs-websocket v5](https://github.com/obsproject/obs-websocket) protocol — scenes, sources, scene items, inputs and the full audio mixer, filters, transitions, streaming, recording, virtual camera, replay buffer, media playback, studio mode, and objective output stats. On top of raw control, it ships **pipeline tools** that do the actual job in one call instead of making the AI hand-assemble a filter chain — `clean_audio_input` builds a verified Noise Gate → Noise Suppression → Compressor chain instead of guessing at OBS's internal filter parameter names.
+OBS-MCP connects any MCP-compatible AI assistant to [OBS Studio](https://obsproject.com/), giving it full control over your stream and recordings through **148 tools** covering the entire [obs-websocket v5](https://github.com/obsproject/obs-websocket) protocol — scenes, sources, scene items, inputs and the full audio mixer, filters, transitions, streaming, recording, virtual camera, replay buffer, media playback, studio mode, and objective output stats. On top of raw control, it ships **pipeline tools** that do the actual job in one call instead of making the AI hand-assemble a filter chain — `clean_audio_input` builds a verified Noise Gate → Noise Suppression → Compressor chain instead of guessing at OBS's internal filter parameter names, and `diagnose_av_health` tells you *why* your frames are dropping instead of handing back raw numbers.
 
 **OBS-MCP itself runs entirely on your machine.** It's a local WebSocket client that talks directly to OBS Studio's built-in `obs-websocket` server — your stream, recordings, and scene setup never leave your computer. The AI "brain" lives wherever you already run it: Claude Desktop / Claude Code / Cursor / any MCP client. You bring the AI, OBS-MCP handles OBS.
+
+**If this is useful to you, a star helps other people find it** — that's the whole marketing budget for this project.
 
 ### Works With
 
@@ -38,40 +40,48 @@ OBS-MCP works with any AI client that supports the [Model Context Protocol](http
 
 ---
 
+## New here? What this actually is
+
+If you've never used Claude Desktop or heard of "MCP" before, here's the whole idea in plain terms:
+
+- **Claude Desktop** is Anthropic's free AI chat app (like ChatGPT, but made by Anthropic) — you download it, sign in, and type messages to it like a chatbot.
+- **MCP (Model Context Protocol)** is a plug-in system that lets that chat app actually *do things* on your computer, not just talk. Without MCP, Claude can only give you instructions ("go to Tools menu, click..."). With MCP, Claude can just do it directly.
+- **OBS-MCP is the plug-in for OBS Studio specifically.** Once it's installed, you can type things like *"clean up my mic"* or *"switch to my starting soon scene"* into Claude, and it actually happens in OBS — no clicking through menus yourself.
+
+You don't need to know any code to use this. The installer below handles everything except two things only you can do: telling OBS to allow the connection, and telling your AI app to use this plug-in. Both are explained step by step.
+
+---
+
 ## Quick Start
 
 ### 1. Get OBS-MCP
 
-**Option A:** Click the green **Code** button above → **Download ZIP** → extract to a folder
+**Option A:** Click the green **Code** button above → **Download ZIP** → extract it to a folder somewhere easy to find (like your Desktop)
 
 **Option B:** Clone with git:
 ```bash
 git clone https://github.com/xDarkzx/OBS_MCP.git
 ```
 
-### 2. Install
+### 2. Run the installer (installs OBS-MCP *and* sets up your AI client, automatically)
+
+Open the folder you just extracted/cloned, then:
+
+- **Windows:** Double-click `install.bat`
+- **macOS / Linux:** Open a terminal in that folder and run `bash install.sh`
+
+The installer checks you have Python (offers to install it if not), installs the `obs-mcp` command, and — if you say yes when it asks — automatically writes the config for Claude Desktop and/or LM Studio. No manual JSON editing required. Once it finishes, skip straight to [step 3](#3-enable-the-websocket-server-in-obs).
+
+<details>
+<summary>I don't use Claude Desktop or LM Studio, or want to install manually</summary>
+
+**If you can `pip install`:**
 
 ```bash
-cd OBS_MCP
 pip install -e .
 ```
 
-This gives you the `obs-mcp` command.
-
-### 3. Enable the WebSocket server in OBS
-
-OBS Studio ships `obs-websocket` built in since v28 — nothing to install.
-
-1. Open OBS Studio.
-2. **Tools → WebSocket Server Settings**.
-3. Check **Enable WebSocket server**.
-4. Note the **Server Port** (default `4455`).
-
-**No password set yet?** Leave it blank and skip to step 4 — `OBS_PASSWORD` stays empty.
-
-**Already have a password** (from a Stream Deck integration, chatbot, or earlier setup)? Don't retype it from memory — click **Show Connect Info** in that same settings window, which reveals the exact password OBS has stored. Copy it from there.
-
-### 4. Add OBS-MCP to your AI client
+from inside the folder. This gives you an `obs-mcp` command on your PATH — find where it landed with `where obs-mcp` (Windows) or `which obs-mcp` (macOS/Linux) if you ever need the exact file path. Add this to your client's MCP config:
 
 ```json
 {
@@ -88,11 +98,58 @@ OBS Studio ships `obs-websocket` built in since v28 — nothing to install.
 }
 ```
 
-Leave `OBS_PASSWORD` empty (`""`) if you didn't set one in OBS. If your password contains a `"` or `\`, escape it for JSON (`\"` / `\\`) — everything else can go in as-is. Check your client's MCP documentation for the config file location. Full walkthrough with more detail: [Installation Guide](docs/INSTALLATION.md).
+**If you'd rather not install anything at all**, point your client straight at the source file instead of a command — `obs_mcp/main.py` inside the folder you cloned/extracted is the actual MCP server entry point:
 
-### 5. Talk to your AI
+```json
+{
+  "mcpServers": {
+    "obs": {
+      "command": "python",
+      "args": ["-m", "obs_mcp.main"],
+      "cwd": "/absolute/path/to/the/OBS_MCP/folder/you/extracted",
+      "env": {
+        "OBS_HOST": "localhost",
+        "OBS_PORT": "4455",
+        "OBS_PASSWORD": "your_password_here"
+      }
+    }
+  }
+}
+```
 
-With OBS running and the WebSocket server enabled, ask your AI assistant to switch scenes, start streaming, clean up your mic audio, or check your dropped-frame stats — it now has real tools to do it.
+Either way: leave `OBS_PASSWORD` empty (`""`) if you didn't set one in OBS. If your password has a `"` or `\` in it, escape it for JSON (`\"` / `\\`) — everything else can go in as-is. Check your client's own MCP documentation for where its config file lives. Full detail, including exact config-file paths per OS: [Installation Guide](docs/INSTALLATION.md).
+
+</details>
+
+### 3. Enable the WebSocket server in OBS
+
+This is the one thing the installer genuinely can't do for you — OBS itself has to allow the connection.
+
+OBS Studio ships this built in since v28 — there's nothing to download or install for this part.
+
+1. Open OBS Studio.
+2. **Tools → WebSocket Server Settings**.
+3. Check **Enable WebSocket server**.
+4. Note the **Server Port** (default `4455`, you usually don't need to change this).
+
+**No password set yet?** Leave it blank — that's fine for a normal single-PC setup.
+
+**Already have a password** (from a Stream Deck integration, chatbot, or earlier setup)? Don't retype it from memory — click **Show Connect Info** in that same settings window, which reveals the exact password OBS has stored.
+
+Full walkthrough with screenshots-worth of detail if you get stuck: [Installation Guide](docs/INSTALLATION.md).
+
+### 4. Talk to your AI
+
+Restart Claude Desktop if it was already open, then just talk to it normally — for example:
+
+```
+"What OBS scenes do I have?"
+"Clean up my mic audio"
+"Why are my frames dropping?"
+"Switch to my Starting Soon scene"
+```
+
+If OBS is running with the WebSocket server enabled, it just works — no special syntax, ask like you'd ask a person.
 
 ---
 

@@ -4,8 +4,20 @@ All notable changes to OBS-MCP will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-26
+
 ### Added
 
+- **One-click installers (`install.sh` / `install.bat`).** Check for Python
+  (offer to install it if missing), install `obs-mcp`, verify the installed
+  `obs-mcp` command actually resolves to the Python just used (catches
+  stale/shadowed installs on machines with multiple Pythons), and
+  optionally write the config for Claude Desktop and/or LM Studio
+  automatically — no manual JSON editing required for a first-time setup.
+  Both scripts were actually executed end-to-end during development, not
+  just written — `install.bat` initially failed on non-ASCII characters in
+  its comment headers under `cmd.exe`'s default codepage, caught by running
+  it rather than assuming Windows batch syntax was fine.
 - **`diagnose_av_health` pipeline tool.** Pulls `GetStats` + `GetStreamStatus`
   + `GetRecordStatus` in one call and interprets the render-skip/output-skip/
   congestion ratios instead of returning raw numbers — distinguishes a GPU/
@@ -35,6 +47,8 @@ All notable changes to OBS-MCP will be documented in this file.
   whole tool exists to guarantee. It now anchors its three managed stages
   as an adjacent, correctly-ordered group regardless of what already
   existed on the input.
+
+## [0.1.0] - 2026-07-17
 
 ### Added
 
