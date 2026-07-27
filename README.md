@@ -102,25 +102,31 @@ The installer checks you have Python (offers to install it if not), installs the
 pip install obs-mcp
 ```
 
-or, for zero footprint (same idea as `npx` in Node.js — nothing stays installed):
-
-```bash
-uvx obs-mcp
-```
-
-**If you already have the repo cloned/extracted:**
-
-```bash
-pip install -e .
-```
-
-from inside the folder. Either way you get an `obs-mcp` command on your PATH — find where it landed with `where obs-mcp` (Windows) or `which obs-mcp` (macOS/Linux) if you ever need the exact file path. Add this to your client's MCP config:
+(or `pip install -e .` from inside the folder if you already have the repo cloned/extracted). Either way, this puts an `obs-mcp` command on your PATH — find where it landed with `where obs-mcp` (Windows) or `which obs-mcp` (macOS/Linux) if you ever need the exact file path. Add this to your client's MCP config:
 
 ```json
 {
   "mcpServers": {
     "obs": {
       "command": "obs-mcp",
+      "env": {
+        "OBS_HOST": "localhost",
+        "OBS_PORT": "4455",
+        "OBS_PASSWORD": "your_password_here"
+      }
+    }
+  }
+}
+```
+
+**Or for zero footprint** (same idea as `npx` in Node.js — nothing stays installed, `uvx` runs it fresh each time from its own cache): since there's no permanent `obs-mcp` binary in this case, point the config at `uvx` itself instead:
+
+```json
+{
+  "mcpServers": {
+    "obs": {
+      "command": "uvx",
+      "args": ["obs-mcp"],
       "env": {
         "OBS_HOST": "localhost",
         "OBS_PORT": "4455",

@@ -4,6 +4,12 @@ All notable changes to OBS-MCP will be documented in this file.
 
 ## [Unreleased]
 
+### Infrastructure
+
+- **Published to PyPI as `obs-mcp`** — `pip install obs-mcp` / `uvx obs-mcp` now work with no clone required.
+- **CI** — `ci.yml` runs the full test suite on every push/PR across Ubuntu/Windows/macOS × Python 3.10–3.13 (12 combinations).
+- **Tokenless automated publishing** — `publish.yml` builds and publishes to PyPI on every version tag (or manual dispatch) via PyPI's Trusted Publisher (OIDC) mechanism, no stored API token, and gates on the tagged commit itself passing tests before publishing.
+
 ## [0.2.0] - 2026-07-26
 
 ### Added

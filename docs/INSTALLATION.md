@@ -101,13 +101,33 @@ Otherwise, pick your client below. Each section shows the **complete config** �
 
 **Option A: Installed with pip** (simplest config)
 
-If you installed via `pip install -e .`, your config is:
+If you installed via `pip install obs-mcp` or `pip install -e .`, your config is:
 
 ```json
 {
   "mcpServers": {
     "obs": {
       "command": "obs-mcp",
+      "env": {
+        "OBS_HOST": "localhost",
+        "OBS_PORT": "4455",
+        "OBS_PASSWORD": ""
+      }
+    }
+  }
+}
+```
+
+**Option A2: Running via `uvx`** (nothing permanently installed)
+
+If you're using `uvx obs-mcp` instead of a permanent install, point the config at `uvx` itself, not at an `obs-mcp` binary — there isn't one sitting on your PATH in this case:
+
+```json
+{
+  "mcpServers": {
+    "obs": {
+      "command": "uvx",
+      "args": ["obs-mcp"],
       "env": {
         "OBS_HOST": "localhost",
         "OBS_PORT": "4455",
@@ -273,7 +293,7 @@ If you see your actual scene list come back, you're all set — everything downs
 |---------|-------|-----|
 | "Could not connect to OBS" | OBS isn't running, or WebSocket server is disabled | Start OBS, check Tools → WebSocket Server Settings → Enable WebSocket server |
 | "Authentication failed" | Password mismatch | Match `OBS_PASSWORD` to what's set in OBS's WebSocket Server Settings exactly, including empty vs. set. Use **Show Connect Info** in that settings window to see the exact stored password instead of retyping it from memory — this is the #1 cause of this error with pre-existing/complex passwords. |
-| "command not found: obs-mcp" | Not installed, or installed in a different Python env than your AI client uses | Run the installer again, or manually: `pip install -e .` from the repo folder |
+| "command not found: obs-mcp" | Not installed, or installed in a different Python env than your AI client uses | Run the installer again, or manually: `pip install obs-mcp` (or `pip install -e .` from the repo folder if you're working from a clone) |
 | Config not working | Wrong path or JSON syntax | Copy the complete example above, validate JSON at jsonlint.com |
 | Claude Desktop doesn't see OBS-MCP | Config not loaded | Restart Claude Desktop after editing the config |
 | Tool calls hang | OBS itself showing a blocking dialog | Check for a "scene collection changed" or similar prompt in OBS — some requests block until you dismiss OBS-side UI |
