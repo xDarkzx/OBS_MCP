@@ -9,7 +9,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-compatible-purple.svg" alt="MCP Compatible" /></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.0-orange.svg" alt="v0.2.0" /></a>
-  <a href="#development"><img src="https://img.shields.io/badge/tests-pytest-0A9EDC.svg" alt="pytest" /></a>
+  <a href="https://pypi.org/project/obs-mcp/"><img src="https://img.shields.io/pypi/v/obs-mcp.svg?color=blue" alt="PyPI" /></a>
+  <a href="https://github.com/xDarkzx/OBS_MCP/actions/workflows/ci.yml"><img src="https://github.com/xDarkzx/OBS_MCP/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://obsproject.com/"><img src="https://img.shields.io/badge/OBS%20Studio-28%2B-red.svg" alt="OBS Studio 28+" /></a>
 </p>
 
