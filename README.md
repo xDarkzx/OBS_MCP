@@ -1,3 +1,4 @@
+<!-- mcp-name: io.github.xDarkzx/obs-mcp -->
 <h1 align="center">OBS-MCP</h1>
 
 <p align="center">
