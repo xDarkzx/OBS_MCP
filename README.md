@@ -17,6 +17,8 @@
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#new-here-what-this-actually-is">New Here?</a> &bull;
+  <a href="#why-obs-mcp">Why OBS-MCP?</a> &bull;
   <a href="#features">Features</a> &bull;
   <a href="docs/TOOLS.md">Tools Reference</a> &bull;
   <a href="docs/ARCHITECTURE.md">Architecture</a> &bull;
@@ -25,9 +27,11 @@
 
 ---
 
-OBS-MCP connects any MCP-compatible AI assistant to [OBS Studio](https://obsproject.com/), giving it full control over your stream and recordings through **148 tools** covering the entire [obs-websocket v5](https://github.com/obsproject/obs-websocket) protocol — scenes, sources, scene items, inputs and the full audio mixer, filters, transitions, streaming, recording, virtual camera, replay buffer, media playback, studio mode, and objective output stats. On top of raw control, it ships **pipeline tools** that do the actual job in one call instead of making the AI hand-assemble a filter chain — `clean_audio_input` builds a verified Noise Gate → Noise Suppression → Compressor chain instead of guessing at OBS's internal filter parameter names, and `diagnose_av_health` tells you *why* your frames are dropping instead of handing back raw numbers.
+OBS-MCP connects any MCP-compatible AI assistant to [OBS Studio](https://obsproject.com/), giving it full control over your stream and recordings. Say *"clean up my mic"* or *"switch to my starting soon scene"* and it just happens — no clicking through menus yourself.
 
-**OBS-MCP itself runs entirely on your machine.** It's a local WebSocket client that talks directly to OBS Studio's built-in `obs-websocket` server — your stream, recordings, and scene setup never leave your computer. The AI "brain" lives wherever you already run it: Claude Desktop / Claude Code / Cursor / any MCP client. You bring the AI, OBS-MCP handles OBS.
+**148 tools** cover the entire [obs-websocket v5](https://github.com/obsproject/obs-websocket) protocol — scenes, sources, the full audio mixer, filters, transitions, streaming, recording, virtual camera, replay buffer, studio mode, and output stats. On top of raw control, **pipeline tools** do the actual job in one call instead of making the AI hand-assemble a filter chain: `clean_audio_input` builds a verified Noise Gate → Noise Suppression → Compressor chain instead of guessing at OBS's internal filter parameter names, and `diagnose_av_health` tells you *why* your frames are dropping instead of handing back raw numbers.
+
+**No cloud. Nothing leaves your machine.** OBS-MCP is a local WebSocket client that talks directly to OBS Studio's built-in `obs-websocket` server — your stream, recordings, and scene setup stay on your computer. Bring whatever AI client you already use (Claude Desktop, Claude Code, Cursor, any MCP client) — OBS-MCP handles OBS.
 
 **If this is useful to you, a star helps other people find it** — that's the whole marketing budget for this project.
 
@@ -39,6 +43,15 @@ OBS-MCP works with any AI client that supports the [Model Context Protocol](http
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — CLI agent
 - [Cursor](https://www.cursor.com/) — AI code editor with MCP support
 - Any other [MCP-compatible client](https://modelcontextprotocol.io/clients)
+
+---
+
+## Why OBS-MCP?
+
+- **Pipeline tools, not just raw API access.** Most OBS automation stops at "call obs-websocket." OBS-MCP goes further — `clean_audio_input`, `diagnose_av_health`, and other pipelines encode the actual expertise (the right filter chain order, what a dropped-frame stat actually means) so the AI gets it right instead of guessing at parameter names.
+- **100% local.** No cloud calls, no API keys, nothing leaves your machine — OBS-MCP talks to OBS Studio's own built-in WebSocket server on disk-and-loopback only.
+- **Full protocol coverage.** All of obs-websocket v5 is exposed — scenes, audio mixer, filters, transitions, streaming, recording, virtual camera, replay buffer, studio mode — not a curated subset.
+- **Composable with companion tools.** Pairs with [Reaper-MCP](https://github.com/xDarkzx/Reaper-MCP) and [Audacity-MCP](https://github.com/xDarkzx/Audacity-MCP) if your stream setup also touches music production or audio cleanup — same AI conversation, different tool for each job.
 
 ---
 
