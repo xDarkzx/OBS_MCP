@@ -34,7 +34,7 @@ OBS-MCP connects any MCP-compatible AI assistant to [OBS Studio](https://obsproj
 
 **No cloud. Nothing leaves your machine.** OBS-MCP is a local WebSocket client that talks directly to OBS Studio's built-in `obs-websocket` server — your stream, recordings, and scene setup stay on your computer. Bring whatever AI client you already use (Claude Desktop, Claude Code, Cursor, any MCP client) — OBS-MCP handles OBS.
 
-**If this is useful to you, a star helps other people find it** — that's the whole marketing budget for this project.
+**If this is useful to you, a star helps other people find it** — that's the whole marketing budget for this project. Want to help keep it maintained? Click the **Sponsor** badge up top.
 
 ### Works With
 
