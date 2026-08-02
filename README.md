@@ -13,6 +13,7 @@
   <a href="https://pypi.org/project/obs-mcp/"><img src="https://img.shields.io/pypi/v/obs-mcp.svg?color=blue" alt="PyPI" /></a>
   <a href="https://github.com/xDarkzx/OBS_MCP/actions/workflows/ci.yml"><img src="https://github.com/xDarkzx/OBS_MCP/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://obsproject.com/"><img src="https://img.shields.io/badge/OBS%20Studio-28%2B-red.svg" alt="OBS Studio 28+" /></a>
+  <a href="https://github.com/sponsors/xDarkzx"><img src="https://img.shields.io/badge/Sponsor-30363D?logo=githubsponsors&logoColor=EA4AAA" alt="Sponsor" /></a>
 </p>
 
 <p align="center">
