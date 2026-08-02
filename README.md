@@ -291,11 +291,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
 
 Found a bug or want a feature? [Open an issue](https://github.com/xDarkzx/OBS_MCP/issues).
 
-If OBS-MCP has helped your stream, consider buying me a coffee:
+If OBS-MCP has helped your stream, consider sponsoring:
 
 <p align="center">
-  <a href="https://buymeacoffee.com/xdarkzx">
-    <img src="https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" />
+  <a href="https://github.com/sponsors/xDarkzx">
+    <img src="https://img.shields.io/badge/Sponsor-30363D?style=for-the-badge&logo=githubsponsors&logoColor=EA4AAA" alt="GitHub Sponsors" />
   </a>
 </p>
 
